@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Millet Vekili Finans</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 25px;
+      background: #101827;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .panel {
+      margin-top: 70px;
+      padding: 25px;
+      background: #1d293b;
+      border-radius: 18px;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      border: 0;
+      border-radius: 12px;
+      background: #16a085;
+      color: white;
+      font-size: 17px;
+      margin-top: 20px;
+    }
+    #address {
+      overflow-wrap: anywhere;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>🏛️ MİLLET VEKİLİ FİNANS</h2>
+    <p>TRON cüzdanını güvenli şekilde bağla.</p>
+    <button onclick="connectWallet()">TronLink Cüzdanımı Bağla</button>
+    <p id="status">Henüz cüzdan bağlanmadı.</p>
+    <p id="address"></p>
+  </div>
+
+  <script>
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
+
+    async function connectWallet() {
+      const status = document.getElementById("status");
+      const address = document.getElementById("address");
+
+      status.textContent = "Cüzdan aranıyor...";
+      address.textContent = "";
+
+      try {
+        let provider = window.tron;
+
+        if (!provider) {
+          status.textContent =
+            "TronLink bulunamadı. Sayfayı TronLink uygulamasının DApp tarayıcısında aç.";
+          return;
+        }
+
+        const result = await provider.request({
+          method: "eth_requestAccounts"
+        });
+
+        const walletAddress =
+          Array.isArray(result) ? result[0] :
+          provider.tronWeb &&
+          provider.tronWeb.defaultAddress.base58;
+
+        if (!walletAddress) {
+          throw new Error("Cüzdan adresi alınamadı.");
+        }
+
+        status.textContent = "Cüzdan başarıyla bağlandı!";
+        address.textContent = "Adres: " + walletAddress;
+
+      } catch (error) {
+        status.textContent =
+          "Bağlantı kurulamadı: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
