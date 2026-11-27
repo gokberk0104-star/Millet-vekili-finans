@@ -5,94 +5,104 @@ const button = document.getElementById("createWallet");
 const result = document.getElementById("walletResult");
 
 button.addEventListener("click", async () => {
-  button.disabled = true;
+  if (document.getElementById("backupPassword")) return;
 
-  try {
-    if (!window.crypto?.subtle) {
-      throw new Error("Güvenli tarayıcı bağlantısı gerekli.");
-    }
+  const label = document.createElement("p");
+  label.textContent = "Yedekleme şifreni belirle (en az 12 karakter):";
 
-    const password = prompt(
-      "Şifreli yedekleme için güçlü bir şifre belirle:"
-    );
+  const password = document.createElement("input");
+  password.id = "backupPassword";
+  password.type = "password";
+  password.autocomplete = "new-password";
+  password.placeholder = "Güçlü bir şifre belirle";
+  password.minLength = 12;
+  password.style.cssText =
+    "width:90%;padding:12px;margin:10px;border-radius:8px;";
 
-    if (!password || password.length < 12) {
-      throw new Error("En az 12 karakterli bir şifre kullan.");
-    }
+  const confirm = document.createElement("button");
+  confirm.textContent = "Cüzdanı Oluştur";
 
-    result.textContent = "Cüzdan oluşturuluyor...";
+  result.replaceChildren(label, password, confirm);
 
-    const wallet = TronWeb.createRandom();
-    const phrase = wallet.mnemonic.phrase;
-    const address = wallet.address;
+  confirm.addEventListener("click", async () => {
+    confirm.disabled = true;
 
-    const encoder = new TextEncoder();
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    try {
+      if (!window.crypto?.subtle) {
+        throw new Error("Güvenli bağlantı gerekli.");
+      }
 
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"]
-    );
+      if (password.value.length < 12) {
+        throw new Error("Şifre en az 12 karakter olmalı.");
+      }
 
-    const key = await crypto.subtle.deriveKey(
-      {
+      const wallet = TronWeb.createRandom();
+      const phrase = wallet.mnemonic.phrase;
+      const address = wallet.address;
+
+      const encoder = new TextEncoder();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      const material = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(password.value),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+
+      const key = await crypto.subtle.deriveKey({
         name: "PBKDF2",
         salt,
         iterations: 310000,
         hash: "SHA-256"
-      },
-      keyMaterial,
-      {
+      }, material, {
         name: "AES-GCM",
         length: 256
-      },
-      false,
-      ["encrypt"]
-    );
+      }, false, ["encrypt"]);
 
-    const encrypted = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      key,
-      encoder.encode(phrase)
-    );
+      const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        key,
+        encoder.encode(phrase)
+      );
 
-    const toBase64 = bytes =>
-      btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      const base64 = data =>
+        btoa(String.fromCharCode(...new Uint8Array(data)));
 
-    const backup = {
-      version: 1,
-      network: "TRON",
-      address,
-      salt: toBase64(salt),
-      iv: toBase64(iv),
-      encryptedMnemonic: toBase64(encrypted)
-    };
+      const backup = {
+        version: 1,
+        network: "TRON",
+        address,
+        salt: base64(salt),
+        iv: base64(iv),
+        encryptedMnemonic: base64(encrypted)
+      };
 
-    const file = new Blob(
-      [JSON.stringify(backup, null, 2)],
-      { type: "application/json" }
-    );
+      const file = new Blob(
+        [JSON.stringify(backup, null, 2)],
+        { type: "application/json" }
+      );
 
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(file);
-    link.download = "millet-vekilim-cuzdan-yedegi.json";
-    link.click();
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "cuzdan-yedegi.json";
+      link.click();
 
-    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
 
-    result.textContent =
-      "Cüzdan oluşturuldu. Adres: " + address +
-      "\nŞifreli yedekleme dosyası indirildi. " +
-      "Dosyayı ve şifreni ayrı ayrı güvenli yerlerde sakla.";
+      result.textContent =
+        "Test cüzdanı oluşturuldu. Adres: " + address +
+        " Şifreli yedek dosyası indirilmeye çalışıldı.";
 
-  } catch (error) {
-    result.textContent = "Hata: " + error.message;
-  } finally {
-    button.disabled = false;
-  }
+    } catch (error) {
+      result.textContent = "Hata: " + error.message;
+    } finally {
+      confirm.disabled = false;
+    }
+  });
 });
+
 
