@@ -10,14 +10,14 @@
 body {
   background:#101827;
   color:white;
-  font-family:Arial;
+  font-family:Arial,sans-serif;
   text-align:center;
-  padding:25px;
+  padding:20px;
 }
 .panel {
   background:#1d293b;
   padding:25px;
-  margin-top:60px;
+  margin-top:45px;
   border-radius:18px;
 }
 button {
@@ -28,65 +28,32 @@ button {
   border:0;
   border-radius:12px;
   font-size:17px;
+  margin-top:15px;
 }
-#address {
+#walletResult {
   overflow-wrap:anywhere;
+  line-height:1.6;
 }
 </style>
 </head>
 <body>
 
 <div class="panel">
-<h2>🏛️ MİLLET VEKİLİ FİNANS</h2>
-<p>TRON cüzdanını bağla</p>
-<button onclick="connectWallet()">TronLink Cüzdanımı Bağla</button>
-<p id="status">Cüzdan bağlanmadı.</p>
-<p id="address"></p>
+  <h2>🏛️ MİLLET VEKİLİ FİNANS</h2>
+  <p>Kişisel TRON cüzdanını oluştur.</p>
+
+  <button id="createWallet">🆕 Yeni Cüzdan Oluştur</button>
+
+  <div id="walletResult"></div>
 </div>
 
 <script>
-if (window.Telegram?.WebApp) {
+if (window.Telegram && window.Telegram.WebApp) {
   window.Telegram.WebApp.ready();
-}
-
-let tronProvider = window.tron || null;
-
-window.addEventListener("TIP6963:announceProvider", function(e) {
-  if (e.detail?.info?.name === "TronLink") {
-    tronProvider = e.detail.provider;
-  }
-});
-
-window.dispatchEvent(new Event("TIP6963:requestProvider"));
-
-async function connectWallet() {
-  const status = document.getElementById("status");
-  const address = document.getElementById("address");
-
-  address.textContent = "";
-  status.textContent = "Cüzdan aranıyor...";
-
-  try {
-    if (!tronProvider) {
-      throw new Error("TronLink bulunamadı. TronLink DApp tarayıcısından aç.");
-    }
-
-    const accounts = await tronProvider.request({
-      method: "eth_requestAccounts"
-    });
-
-    if (!accounts || !accounts[0]) {
-      throw new Error("Cüzdan bağlantısı onaylanmadı.");
-    }
-
-    status.textContent = "Cüzdan başarıyla bağlandı!";
-    address.textContent = "Adres: " + accounts[0];
-
-  } catch (error) {
-    status.textContent = error.message || "Bağlantı başarısız.";
-  }
 }
 </script>
 
+<script type="module" src="./wallet.js"></script>
 </body>
 </html>
+
