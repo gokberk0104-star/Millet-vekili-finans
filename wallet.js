@@ -1,6 +1,6 @@
 
 import { TronWeb } from "https://esm.sh/tronweb@6.5.1";
-
+document.getElementById("walletResult").innerText = "Kod yüklendi";
 const button = document.getElementById("createWallet");
 const result = document.getElementById("walletResult");
 
