@@ -1,5 +1,4 @@
-import * as TronWebModule from "https://esm.sh/tronweb@6.5.1";
-const TronWeb = TronWebModule.TronWeb;
+import * as document.getElementById("walletResult").innerText = "JavaScript çalışıyor";
 document.getElementById("walletResult").innerText = "Kod yüklendi";
 const button = document.getElementById("createWallet");
 const result = document.getElementById("walletResult");
